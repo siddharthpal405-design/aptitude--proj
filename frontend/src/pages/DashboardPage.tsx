@@ -4,7 +4,18 @@ import { useAuth } from '../context/AuthContext';
 import api from '../api/client';
 import { Category } from '../types';
 import { ActivityHeatmap } from '../components/ActivityHeatmap';
-import { Flame, Target, BookOpen, ChevronRight, Clock, Trophy, Sparkles, ArrowRight } from 'lucide-react';
+import {
+  Flame,
+  Target,
+  BookOpen,
+  Calculator,
+  Cpu,
+  BarChart3,
+  ChevronRight,
+  Clock,
+  ArrowRight,
+  Layers,
+} from 'lucide-react';
 
 export const DashboardPage: React.FC = () => {
   const { user, streak } = useAuth();
@@ -30,179 +41,219 @@ export const DashboardPage: React.FC = () => {
     0
   );
 
+  const getCategoryIcon = (slug: string) => {
+    if (slug.includes('quant')) return Calculator;
+    if (slug.includes('logic')) return Cpu;
+    if (slug.includes('data')) return BarChart3;
+    return BookOpen;
+  };
+
+  const todayCount = streak?.todayQuestionsSolved || 0;
+  const dailyProgressPct = Math.min(100, (todayCount / 5) * 100);
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      {/* Welcome & Streak Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-6 sm:p-10 shadow-xl shadow-slate-900/10">
-        <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-2">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-xs font-semibold text-sky-300">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Aptitude Mastery Platform • Phase 2</span>
-            </div>
-            <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight">
-              Welcome back, {user?.fullName}! 👋
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8">
+      {/* Executive Welcome & Overview Header */}
+      <section className="bg-white rounded-xl border border-slate-200 p-5 sm:p-6 shadow-xs space-y-6">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-100 pb-5">
+          <div className="space-y-1">
+            <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">
+              Preparation Overview
+            </p>
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+              Welcome back, {user?.fullName}
             </h1>
-            <p className="text-slate-300 text-sm sm:text-base max-w-xl">
-              Practice chapter-wise MCQs, take timed mock tests under exam conditions, and watch your daily streak thrive.
+            <p className="text-sm text-slate-500 max-w-2xl">
+              Explore structured study notes, browse 100+ verified MCQs per chapter, or launch a timed mock examination.
             </p>
           </div>
 
-          {/* Daily Streak Highlight Widget */}
-          <div className="flex items-center space-x-4 bg-white/10 backdrop-blur-md border border-white/15 p-4 sm:p-5 rounded-2xl">
-            <div className="w-14 h-14 rounded-2xl bg-amber-500/20 border border-amber-400/30 flex items-center justify-center text-amber-400">
-              <Flame className="w-8 h-8 fill-amber-400 animate-bounce" />
+          <div className="flex flex-wrap items-center gap-2.5 self-start lg:self-auto">
+            <Link
+              to="/short-notes"
+              className="inline-flex items-center justify-center space-x-2 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 transition-colors"
+            >
+              <span>Short Notes &amp; Tricks</span>
+            </Link>
+
+            <Link
+              to="/subjects"
+              className="inline-flex items-center justify-center space-x-2 px-4 py-2.5 rounded-lg text-sm font-medium text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 transition-colors"
+            >
+              <BookOpen className="w-4 h-4 text-slate-500" />
+              <span>All Subjects</span>
+            </Link>
+
+            <Link
+              to="/mock-tests"
+              className="inline-flex items-center justify-center space-x-2 px-4 py-2.5 rounded-lg text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 transition-colors"
+            >
+              <Clock className="w-4 h-4 text-slate-300" />
+              <span>Timed Mock Tests</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
+
+        {/* 3-Column Metrics Strip */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="p-4 rounded-lg bg-slate-50 border border-slate-200/80 flex items-center space-x-3.5">
+            <div className="w-10 h-10 rounded-lg bg-amber-50 border border-amber-200 flex items-center justify-center flex-shrink-0">
+              <Flame
+                className={`w-5 h-5 ${
+                  streak && streak.currentStreak > 0
+                    ? 'text-amber-600 fill-amber-500'
+                    : 'text-slate-400'
+                }`}
+              />
             </div>
             <div>
-              <div className="flex items-baseline space-x-2">
-                <span className="text-3xl font-extrabold text-amber-300">
+              <p className="text-xs font-medium text-slate-500">Current Study Streak</p>
+              <div className="flex items-baseline space-x-2 mt-0.5">
+                <span className="text-xl font-bold font-mono text-slate-900">
                   {streak?.currentStreak || 0}
                 </span>
-                <span className="text-sm font-semibold text-amber-100">Days Active</span>
+                <span className="text-xs text-slate-600">
+                  {streak?.currentStreak === 1 ? 'day' : 'days'}
+                </span>
+                <span className="text-xs text-slate-400">
+                  (Best:{' '}
+                  <span className="font-mono font-medium text-slate-600">
+                    {streak?.longestStreak || 0}d
+                  </span>
+                  )
+                </span>
               </div>
-              <div className="flex items-center space-x-3 text-xs text-slate-300 mt-1">
-                <span>Best: <strong>{streak?.longestStreak || 0}d</strong></span>
-                <span>•</span>
-                <span>Today: <strong>{streak?.todayQuestionsSolved || 0} Qs</strong></span>
+            </div>
+          </div>
+
+          <div className="p-4 rounded-lg bg-slate-50 border border-slate-200/80 flex flex-col justify-center space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-medium text-slate-500 flex items-center space-x-1.5">
+                <Target className="w-3.5 h-3.5 text-blue-600" />
+                <span>Daily Goal Progress</span>
+              </span>
+              <span className="font-mono font-semibold text-slate-900">
+                {todayCount} / 5 Qs
+              </span>
+            </div>
+            <div className="w-full bg-slate-200 rounded-sm h-2 overflow-hidden">
+              <div
+                className="bg-blue-600 h-2 rounded-sm transition-all duration-300"
+                style={{ width: `${dailyProgressPct}%` }}
+              />
+            </div>
+          </div>
+
+          <div className="p-4 rounded-lg bg-slate-50 border border-slate-200/80 flex items-center space-x-3.5">
+            <div className="w-10 h-10 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center flex-shrink-0">
+              <Layers className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-xs font-medium text-slate-500">Total Question Bank</p>
+              <div className="flex items-baseline space-x-2 mt-0.5">
+                <span className="text-xl font-bold font-mono text-slate-900">
+                  {totalQuestionsInSystem}
+                </span>
+                <span className="text-xs text-slate-600">MCQs across all chapters</span>
               </div>
             </div>
           </div>
         </div>
+      </section>
 
-        {/* Daily Goal Progress Bar */}
-        <div className="mt-8 pt-6 border-t border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center space-x-3">
-            <Target className="w-5 h-5 text-sky-400 flex-shrink-0" />
-            <span className="text-sm font-medium text-slate-300">
-              Daily Target: Practice at least 5 MCQs today to maintain streak!
-            </span>
-          </div>
-          <div className="w-full sm:w-64 bg-slate-800 rounded-full h-2.5 overflow-hidden border border-white/10">
-            <div
-              className="bg-gradient-to-r from-sky-400 to-indigo-400 h-2.5 rounded-full transition-all duration-500"
-              style={{
-                width: `${Math.min(100, ((streak?.todayQuestionsSolved || 0) / 5) * 100)}%`,
-              }}
-            ></div>
-          </div>
-        </div>
-      </div>
-
-      {/* Quick Access Card: Timed Mock Tests (Phase 2 Feature) */}
-      <div className="bg-gradient-to-r from-sky-500 to-indigo-600 rounded-3xl p-6 sm:p-8 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-md">
-        <div className="flex items-center space-x-4">
-          <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center">
-            <Clock className="w-6 h-6 text-white" />
-          </div>
-          <div>
-            <h3 className="text-lg font-bold">Ready for a Real Exam Challenge?</h3>
-            <p className="text-xs sm:text-sm text-sky-100">
-              Take full-length simulated mock tests with live countdown timers, question palettes, and instant scorecards.
-            </p>
-          </div>
-        </div>
-        <Link
-          to="/mock-tests"
-          className="inline-flex items-center space-x-2 px-6 py-3 rounded-2xl font-bold text-xs sm:text-sm bg-white text-indigo-900 hover:bg-slate-100 active:scale-95 transition shadow-sm self-start sm:self-auto"
-        >
-          <span>Explore Mock Tests</span>
-          <ArrowRight className="w-4 h-4" />
-        </Link>
-      </div>
-
-      {/* 365-Day Daily Activity Heatmap (Phase 2 Feature) */}
+      {/* Activity Heatmap */}
       <ActivityHeatmap />
 
-      {/* Syllabus Overview Section */}
-      <div className="space-y-6">
-        <div className="flex items-center justify-between">
+      {/* Syllabus Directory */}
+      <section className="space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
-            <h2 className="text-2xl font-bold text-slate-900 tracking-tight">
-              Aptitude Syllabus Chapters
+            <h2 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">
+              Subjects &amp; Chapter Curriculum
             </h2>
-            <p className="text-sm text-slate-500">
-              Select a chapter below to start solving MCQs with instant step-by-step solutions.
+            <p className="text-xs sm:text-sm text-slate-500">
+              Select any topic to access its Study Material, browse the 100+ Question List, or start interactive practice.
             </p>
           </div>
-          <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
-            {totalQuestionsInSystem} Questions in Bank
-          </span>
+          <Link
+            to="/subjects"
+            className="text-xs sm:text-sm font-semibold text-blue-600 hover:text-blue-700 inline-flex items-center space-x-1 self-start sm:self-auto"
+          >
+            <span>Open Curriculum Explorer</span>
+            <ChevronRight className="w-4 h-4" />
+          </Link>
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-48 rounded-2xl bg-slate-200/60 animate-pulse"></div>
+              <div key={i} className="h-44 rounded-xl bg-slate-200/60 animate-pulse" />
             ))}
           </div>
         ) : (
-          <div className="space-y-8">
-            {categories.map((category) => (
-              <div
-                key={category.id}
-                className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-xs space-y-6"
-              >
-                {/* Category Header */}
-                <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 border border-sky-100 flex items-center justify-center font-bold">
-                      <BookOpen className="w-5 h-5" />
+          <div className="space-y-6">
+            {categories.map((category) => {
+              const CategoryIcon = getCategoryIcon(category.slug);
+              return (
+                <div
+                  key={category.id}
+                  className="bg-white rounded-xl border border-slate-200 p-5 sm:p-6 shadow-xs space-y-5"
+                >
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-9 h-9 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 flex items-center justify-center flex-shrink-0">
+                        <CategoryIcon className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h3 className="text-base font-semibold text-slate-900">
+                          {category.name}
+                        </h3>
+                        <p className="text-xs text-slate-500">{category.description}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="text-xl font-bold text-slate-900">
-                        {category.name}
-                      </h3>
-                      <p className="text-xs text-slate-500">{category.description}</p>
-                    </div>
+                    <span className="text-xs font-mono font-medium px-2.5 py-1 rounded-md bg-slate-100 text-slate-700 border border-slate-200 flex-shrink-0">
+                      {category.chapters.length} chapters
+                    </span>
                   </div>
-                  <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-slate-100 text-slate-600">
-                    {category.chapters.length} Chapters
-                  </span>
-                </div>
 
-                {/* Chapters Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {category.chapters.map((chapter) => (
-                    <div
-                      key={chapter.id}
-                      className="group flex flex-col justify-between p-5 rounded-2xl border border-slate-200/70 hover:border-sky-300 hover:shadow-md hover:shadow-sky-500/5 bg-slate-50/50 hover:bg-white transition-all"
-                    >
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                            Chapter {chapter.displayOrder}
-                          </span>
-                          <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-sky-100/80 text-sky-700">
-                            {chapter.totalQuestions} Questions
-                          </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {category.chapters.map((chapter) => (
+                      <Link
+                        key={chapter.id}
+                        to={`/chapters/${chapter.id}`}
+                        className="group flex flex-col justify-between p-4 rounded-lg border border-slate-200 bg-slate-50/40 hover:bg-white hover:border-blue-500/60 hover:shadow-xs transition-all"
+                      >
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-slate-400">
+                              Ch. {chapter.displayOrder.toString().padStart(2, '0')}
+                            </span>
+                            <span className="text-[11px] font-mono font-medium px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-700">
+                              {chapter.totalQuestions} Qs
+                            </span>
+                          </div>
+                          <h4 className="text-sm font-semibold text-slate-900 group-hover:text-blue-600 transition-colors">
+                            {chapter.title}
+                          </h4>
+                          <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
+                            {chapter.description}
+                          </p>
                         </div>
-                        <h4 className="text-base font-bold text-slate-900 group-hover:text-sky-600 transition-colors">
-                          {chapter.title}
-                        </h4>
-                        <p className="text-xs text-slate-500 line-clamp-2">
-                          {chapter.description}
-                        </p>
-                      </div>
 
-                      <div className="pt-4 mt-2 border-t border-slate-100 flex items-center justify-between">
-                        <span className="text-xs text-slate-400">MCQ Practice</span>
-                        <Link
-                          to={`/practice/${chapter.id}?title=${encodeURIComponent(chapter.title)}`}
-                          className="inline-flex items-center space-x-1.5 text-xs font-semibold text-sky-600 group-hover:text-sky-700 group-hover:translate-x-0.5 transition-all"
-                        >
-                          <span>Start Solving</span>
-                          <ChevronRight className="w-4 h-4" />
-                        </Link>
-                      </div>
-                    </div>
-                  ))}
+                        <div className="pt-3 mt-3 border-t border-slate-200/70 flex items-center justify-between text-xs font-medium text-slate-600 group-hover:text-blue-600">
+                          <span>Study Material &amp; List</span>
+                          <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
-      </div>
+      </section>
     </div>
   );
 };

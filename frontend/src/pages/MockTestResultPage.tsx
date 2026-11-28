@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import api from '../api/client';
-import { TestResultResponse, QuestionReview } from '../types';
-import { Award, CheckCircle2, XCircle, Clock, Target, ArrowRight, RotateCcw, Lightbulb, Filter, BookOpen } from 'lucide-react';
+import { TestResultResponse } from '../types';
+import { CheckCircle2, XCircle, MinusCircle, BookOpenCheck } from 'lucide-react';
 
 export const MockTestResultPage: React.FC = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
-  const navigate = useNavigate();
 
   const [result, setResult] = useState<TestResultResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -15,7 +14,9 @@ export const MockTestResultPage: React.FC = () => {
   useEffect(() => {
     const fetchResult = async () => {
       try {
-        const res = await api.get<TestResultResponse>(`/mock-tests/sessions/${sessionId}/result`);
+        const res = await api.get<TestResultResponse>(
+          `/mock-tests/sessions/${sessionId}/result`
+        );
         setResult(res.data);
       } catch (err) {
         console.error('Failed to load result', err);
@@ -30,8 +31,8 @@ export const MockTestResultPage: React.FC = () => {
     return (
       <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
         <div className="text-center space-y-3">
-          <div className="w-10 h-10 border-4 border-sky-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="text-sm text-slate-500">Calculating your performance metrics...</p>
+          <div className="w-8 h-8 border-2 border-slate-900 border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-xs font-medium text-slate-500">Generating scorecard...</p>
         </div>
       </div>
     );
@@ -51,26 +52,28 @@ export const MockTestResultPage: React.FC = () => {
   const timeSecs = result.totalTimeTakenSeconds % 60;
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      {/* Scorecard Hero Banner */}
-      <div className="rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-6 sm:p-10 shadow-xl space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-6">
-          <div className="space-y-1">
-            <span className="text-xs font-bold text-sky-400 uppercase tracking-wider">
-              Examination Report
-            </span>
-            <h1 className="text-2xl sm:text-3xl font-extrabold">{result.testTitle}</h1>
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
+      {/* Executive Scorecard Card */}
+      <section className="bg-white rounded-xl border border-slate-200 p-5 sm:p-7 shadow-xs space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">
+              Examination Scorecard
+            </p>
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight mt-0.5">
+              {result.testTitle}
+            </h1>
           </div>
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2.5">
             <Link
               to="/mock-tests"
-              className="px-4 py-2 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 border border-white/20 transition"
+              className="px-3.5 py-2 rounded-lg text-xs font-semibold border border-slate-200 text-slate-700 hover:bg-slate-50 transition-colors"
             >
-              All Mock Tests
+              All Tests
             </Link>
             <Link
               to="/"
-              className="px-4 py-2 rounded-xl text-xs font-bold bg-sky-600 hover:bg-sky-500 transition shadow-sm"
+              className="px-3.5 py-2 rounded-lg text-xs font-semibold bg-slate-900 text-white hover:bg-slate-800 transition-colors"
             >
               Dashboard
             </Link>
@@ -78,84 +81,129 @@ export const MockTestResultPage: React.FC = () => {
         </div>
 
         {/* Core Metrics Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="bg-white/10 backdrop-blur-md border border-white/10 p-5 rounded-2xl text-center space-y-1">
-            <span className="text-xs text-slate-300 font-medium">Total Score</span>
-            <div className="text-3xl font-extrabold text-sky-400">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="p-4 rounded-lg bg-slate-50 border border-slate-200/80 space-y-1">
+            <span className="text-xs font-medium text-slate-500">Total Score</span>
+            <div className="text-2xl font-bold font-mono text-slate-900">
               {result.totalScore}
-              <span className="text-sm text-slate-400 font-normal"> / {result.maxMarks}</span>
+              <span className="text-sm font-normal text-slate-400"> / {result.maxMarks}</span>
             </div>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-md border border-white/10 p-5 rounded-2xl text-center space-y-1">
-            <span className="text-xs text-slate-300 font-medium">Accuracy</span>
-            <div className="text-3xl font-extrabold text-emerald-400">
+          <div className="p-4 rounded-lg bg-slate-50 border border-slate-200/80 space-y-1">
+            <span className="text-xs font-medium text-slate-500">Accuracy</span>
+            <div className="text-2xl font-bold font-mono text-emerald-700">
               {result.accuracyPercentage}%
             </div>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-md border border-white/10 p-5 rounded-2xl text-center space-y-1">
-            <span className="text-xs text-slate-300 font-medium">Est. Percentile</span>
-            <div className="text-3xl font-extrabold text-amber-300">
+          <div className="p-4 rounded-lg bg-slate-50 border border-slate-200/80 space-y-1">
+            <span className="text-xs font-medium text-slate-500">Est. Percentile</span>
+            <div className="text-2xl font-bold font-mono text-blue-700">
               {result.percentileEstimate}th
             </div>
           </div>
 
-          <div className="bg-white/10 backdrop-blur-md border border-white/10 p-5 rounded-2xl text-center space-y-1">
-            <span className="text-xs text-slate-300 font-medium">Time Taken</span>
-            <div className="text-2xl font-extrabold text-slate-100">
+          <div className="p-4 rounded-lg bg-slate-50 border border-slate-200/80 space-y-1">
+            <span className="text-xs font-medium text-slate-500">Time Elapsed</span>
+            <div className="text-2xl font-bold font-mono text-slate-900">
               {timeMins}m {timeSecs}s
             </div>
           </div>
         </div>
 
-        {/* Question Split Counter */}
-        <div className="flex flex-wrap items-center justify-around bg-slate-950/40 p-4 rounded-2xl border border-white/5 text-xs text-slate-300 gap-4">
-          <div>Total Questions: <strong className="text-white font-bold">{result.totalQuestions}</strong></div>
-          <div>Attempted: <strong className="text-sky-400 font-bold">{result.attemptedCount}</strong></div>
-          <div>Correct (🟢): <strong className="text-emerald-400 font-bold">{result.correctCount}</strong></div>
-          <div>Incorrect (🔴): <strong className="text-rose-400 font-bold">{result.incorrectCount}</strong></div>
-          <div>Skipped (⚪): <strong className="text-slate-400 font-bold">{result.skippedCount}</strong></div>
+        {/* Question Breakdown Strip */}
+        <div className="flex flex-wrap items-center gap-4 sm:gap-6 pt-2 text-xs font-medium text-slate-600">
+          <span>
+            Total: <strong className="font-mono text-slate-900">{result.totalQuestions}</strong>
+          </span>
+          <span>
+            Attempted: <strong className="font-mono text-slate-900">{result.attemptedCount}</strong>
+          </span>
+          <span className="inline-flex items-center space-x-1.5 text-emerald-700">
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            <span>
+              Correct: <strong className="font-mono">{result.correctCount}</strong>
+            </span>
+          </span>
+          <span className="inline-flex items-center space-x-1.5 text-rose-700">
+            <XCircle className="w-3.5 h-3.5" />
+            <span>
+              Incorrect: <strong className="font-mono">{result.incorrectCount}</strong>
+            </span>
+          </span>
+          <span className="inline-flex items-center space-x-1.5 text-slate-500">
+            <MinusCircle className="w-3.5 h-3.5" />
+            <span>
+              Skipped: <strong className="font-mono">{result.skippedCount}</strong>
+            </span>
+          </span>
         </div>
-      </div>
+      </section>
 
-      {/* Review & Solutions Section */}
-      <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Solution Review */}
+      <section className="space-y-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div>
-            <h2 className="text-xl font-bold text-slate-900">
-              Question-by-Question Solution Review
-            </h2>
+            <h2 className="text-lg font-bold text-slate-900">Solution Review</h2>
             <p className="text-xs text-slate-500">
-              Inspect your answers against the official step-by-step mathematical derivations.
+              Compare your responses against the official step-by-step derivations.
             </p>
           </div>
 
-          {/* Filter Pills */}
-          <div className="flex items-center space-x-1.5 p-1 bg-white border border-slate-200 rounded-xl text-xs font-semibold">
-            {(['ALL', 'CORRECT', 'INCORRECT', 'SKIPPED'] as const).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setFilter(tab)}
-                className={`px-3 py-1.5 rounded-lg transition ${
-                  filter === tab
-                    ? 'bg-slate-900 text-white shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                {tab === 'ALL'
-                  ? `All (${result.reviewList.length})`
-                  : tab === 'CORRECT'
-                  ? `Correct (${result.correctCount})`
-                  : tab === 'INCORRECT'
-                  ? `Incorrect (${result.incorrectCount})`
-                  : `Skipped (${result.skippedCount})`}
-              </button>
-            ))}
+          {/* Segmented Filter Tabs */}
+          <div className="flex flex-wrap items-center gap-1 p-1 bg-slate-100 border border-slate-200 rounded-lg text-xs font-medium">
+            <button
+              type="button"
+              onClick={() => setFilter('ALL')}
+              className={`px-3 py-1.5 rounded-md transition-colors ${
+                filter === 'ALL'
+                  ? 'bg-white text-slate-900 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              All ({result.reviewList.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setFilter('CORRECT')}
+              className={`inline-flex items-center space-x-1 px-3 py-1.5 rounded-md transition-colors ${
+                filter === 'CORRECT'
+                  ? 'bg-white text-emerald-700 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Correct ({result.correctCount})</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setFilter('INCORRECT')}
+              className={`inline-flex items-center space-x-1 px-3 py-1.5 rounded-md transition-colors ${
+                filter === 'INCORRECT'
+                  ? 'bg-white text-rose-700 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <XCircle className="w-3.5 h-3.5 text-rose-600" />
+              <span>Incorrect ({result.incorrectCount})</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setFilter('SKIPPED')}
+              className={`inline-flex items-center space-x-1 px-3 py-1.5 rounded-md transition-colors ${
+                filter === 'SKIPPED'
+                  ? 'bg-white text-slate-900 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <MinusCircle className="w-3.5 h-3.5 text-slate-400" />
+              <span>Skipped ({result.skippedCount})</span>
+            </button>
           </div>
         </div>
 
-        {/* Questions Accordion List */}
+        {/* Review Items */}
         <div className="space-y-4">
           {filteredQuestions.map((q, idx) => {
             const isCorr = Boolean(q.isCorrect || q.correct);
@@ -164,64 +212,61 @@ export const MockTestResultPage: React.FC = () => {
             return (
               <div
                 key={q.questionId}
-                className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 space-y-6 shadow-xs"
+                className="bg-white rounded-xl border border-slate-200 p-5 sm:p-6 space-y-5 shadow-xs"
               >
-                {/* Header Badge */}
-                <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                      Question #{idx + 1}
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3.5">
+                  <div className="flex items-center space-x-2.5">
+                    <span className="text-xs font-mono font-semibold text-slate-500">
+                      Q#{idx + 1}
                     </span>
-                    <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700">
+                    <span className="text-[11px] font-mono font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200">
                       {q.difficulty}
                     </span>
                   </div>
 
-                  <div>
-                    {isCorr ? (
-                      <span className="inline-flex items-center space-x-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                        <span>Correct (+1.00)</span>
-                      </span>
-                    ) : isAtt ? (
-                      <span className="inline-flex items-center space-x-1.5 text-xs font-bold text-rose-700 bg-rose-50 px-3 py-1 rounded-full border border-rose-200">
-                        <XCircle className="w-4 h-4 text-rose-600" />
-                        <span>Incorrect (-0.25)</span>
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center space-x-1 text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1 rounded-full">
-                        <span>Skipped (0.00)</span>
-                      </span>
-                    )}
-                  </div>
+                  {isCorr ? (
+                    <span className="inline-flex items-center space-x-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>Correct</span>
+                    </span>
+                  ) : isAtt ? (
+                    <span className="inline-flex items-center space-x-1.5 text-xs font-semibold text-rose-700 bg-rose-50 px-2.5 py-1 rounded-md border border-rose-200">
+                      <XCircle className="w-3.5 h-3.5" />
+                      <span>Incorrect</span>
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center space-x-1.5 text-xs font-semibold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200">
+                      <MinusCircle className="w-3.5 h-3.5" />
+                      <span>Skipped</span>
+                    </span>
+                  )}
                 </div>
 
-                {/* Question Statement */}
-                <h3 className="text-base sm:text-lg font-semibold text-slate-900 leading-relaxed whitespace-pre-line">
+                <h3 className="text-sm sm:text-base font-medium text-slate-900 leading-relaxed whitespace-pre-line">
                   {q.questionText}
                 </h3>
 
-                {/* Options Review */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   {q.options.map((opt) => {
                     const isSelectedByUser = q.selectedOption === opt.optionKey;
                     const isActualCorrect = q.correctOption === opt.optionKey;
 
                     let cardStyle = 'border-slate-200 bg-slate-50/50 text-slate-700';
                     if (isActualCorrect) {
-                      cardStyle = 'border-emerald-500 bg-emerald-50 text-emerald-950 font-semibold';
+                      cardStyle =
+                        'border-emerald-600 bg-emerald-50/60 text-emerald-950 font-medium';
                     } else if (isSelectedByUser && !isActualCorrect) {
-                      cardStyle = 'border-rose-400 bg-rose-50 text-rose-950';
+                      cardStyle = 'border-rose-500 bg-rose-50/60 text-rose-950';
                     }
 
                     return (
                       <div
                         key={opt.id}
-                        className={`p-3.5 rounded-2xl border-2 flex items-center justify-between text-xs sm:text-sm ${cardStyle}`}
+                        className={`p-3 rounded-lg border flex items-center justify-between gap-2 text-xs sm:text-sm ${cardStyle}`}
                       >
-                        <div className="flex items-center space-x-3">
+                        <div className="flex items-center space-x-2.5">
                           <span
-                            className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs ${
+                            className={`w-6 h-6 rounded-md flex items-center justify-center font-mono font-semibold text-xs flex-shrink-0 ${
                               isActualCorrect
                                 ? 'bg-emerald-600 text-white'
                                 : isSelectedByUser
@@ -235,23 +280,26 @@ export const MockTestResultPage: React.FC = () => {
                         </div>
 
                         {isActualCorrect && (
-                          <span className="text-xs font-bold text-emerald-700">Correct Answer</span>
+                          <span className="text-[11px] font-semibold text-emerald-700 flex-shrink-0">
+                            Answer
+                          </span>
                         )}
                         {isSelectedByUser && !isActualCorrect && (
-                          <span className="text-xs font-bold text-rose-600">Your Choice</span>
+                          <span className="text-[11px] font-semibold text-rose-700 flex-shrink-0">
+                            Your Choice
+                          </span>
                         )}
                       </div>
                     );
                   })}
                 </div>
 
-                {/* Step-by-Step Solution */}
-                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 sm:p-5 space-y-2">
-                  <div className="flex items-center space-x-2 text-indigo-700 font-bold text-xs">
-                    <Lightbulb className="w-4 h-4 text-indigo-600" />
-                    <span>Step-by-Step Mathematical Explanation</span>
+                <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-2">
+                  <div className="flex items-center space-x-2 text-slate-900 font-semibold text-xs uppercase tracking-wider">
+                    <BookOpenCheck className="w-4 h-4 text-blue-600" />
+                    <span>Step-by-Step Solution</span>
                   </div>
-                  <div className="text-slate-800 text-xs sm:text-sm font-mono leading-relaxed whitespace-pre-line bg-white p-3.5 rounded-xl border border-slate-200">
+                  <div className="text-slate-800 text-xs sm:text-sm font-mono leading-relaxed whitespace-pre-line bg-white p-3.5 rounded-md border border-slate-200">
                     {q.explanation}
                   </div>
                 </div>
@@ -259,7 +307,7 @@ export const MockTestResultPage: React.FC = () => {
             );
           })}
         </div>
-      </div>
+      </section>
     </div>
   );
 };

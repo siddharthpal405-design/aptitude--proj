@@ -27,6 +27,9 @@ public class Chapter {
     @Column(length = 1000)
     private String description;
 
+    @Column(columnDefinition = "TEXT")
+    private String studyMaterialJson;
+
     private int displayOrder = 0;
 
     @OneToMany(mappedBy = "chapter", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -57,6 +60,9 @@ public class Chapter {
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+
+    public String getStudyMaterialJson() { return studyMaterialJson; }
+    public void setStudyMaterialJson(String studyMaterialJson) { this.studyMaterialJson = studyMaterialJson; }
 
     public int getDisplayOrder() { return displayOrder; }
     public void setDisplayOrder(int displayOrder) { this.displayOrder = displayOrder; }

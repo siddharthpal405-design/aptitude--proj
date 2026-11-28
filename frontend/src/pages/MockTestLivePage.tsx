@@ -1,8 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api/client';
-import { StartTestResponse, Question, SavedAnswerState, TestResultResponse } from '../types';
-import { Timer, AlertTriangle, CheckCircle2, ChevronLeft, ChevronRight, Bookmark, RotateCcw, Send } from 'lucide-react';
+import { StartTestResponse, Question, TestResultResponse } from '../types';
+import {
+  Timer,
+  AlertTriangle,
+  ChevronLeft,
+  ChevronRight,
+  Bookmark,
+  LayoutGrid,
+  X,
+} from 'lucide-react';
 
 export const MockTestLivePage: React.FC = () => {
   const { testId } = useParams<{ testId: string }>();
@@ -10,12 +18,15 @@ export const MockTestLivePage: React.FC = () => {
 
   const [testData, setTestData] = useState<StartTestResponse | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, { option: string | null; marked: boolean; time: number }>>({});
+  const [answers, setAnswers] = useState<
+    Record<string, { option: string | null; marked: boolean; time: number }>
+  >({});
   const [visited, setVisited] = useState<Set<string>>(new Set());
   const [timeLeftSeconds, setTimeLeftSeconds] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
+  const [mobilePaletteOpen, setMobilePaletteOpen] = useState(false);
 
   // Load Test Data
   useEffect(() => {
@@ -24,8 +35,10 @@ export const MockTestLivePage: React.FC = () => {
         const res = await api.post<StartTestResponse>(`/mock-tests/${testId}/start`);
         setTestData(res.data);
 
-        // Initialize answers map from backend saved state
-        const initialAnswers: Record<string, { option: string | null; marked: boolean; time: number }> = {};
+        const initialAnswers: Record<
+          string,
+          { option: string | null; marked: boolean; time: number }
+        > = {};
         const initialVisited = new Set<string>();
 
         if (res.data.questions.length > 0) {
@@ -49,7 +62,6 @@ export const MockTestLivePage: React.FC = () => {
         setAnswers(initialAnswers);
         setVisited(initialVisited);
 
-        // Calculate remaining seconds
         const startTime = new Date(res.data.startTime).getTime();
         const totalDurationMs = res.data.durationMinutes * 60 * 1000;
         const now = Date.now();
@@ -87,7 +99,9 @@ export const MockTestLivePage: React.FC = () => {
     if (submitting || !testData) return;
     setSubmitting(true);
     try {
-      const res = await api.post<TestResultResponse>(`/mock-tests/sessions/${testData.sessionId}/submit`);
+      const res = await api.post<TestResultResponse>(
+        `/mock-tests/sessions/${testData.sessionId}/submit`
+      );
       navigate(`/mock-tests/result/${res.data.sessionId}`);
     } catch (err) {
       console.error('Auto-submission error', err);
@@ -98,7 +112,9 @@ export const MockTestLivePage: React.FC = () => {
     if (submitting || !testData) return;
     setSubmitting(true);
     try {
-      const res = await api.post<TestResultResponse>(`/mock-tests/sessions/${testData.sessionId}/submit`);
+      const res = await api.post<TestResultResponse>(
+        `/mock-tests/sessions/${testData.sessionId}/submit`
+      );
       navigate(`/mock-tests/result/${res.data.sessionId}`);
     } catch (err) {
       console.error('Submission error', err);
@@ -106,7 +122,11 @@ export const MockTestLivePage: React.FC = () => {
     }
   };
 
-  const saveCurrentAnswerToServer = async (qId: string, option: string | null, marked: boolean) => {
+  const saveCurrentAnswerToServer = async (
+    qId: string,
+    option: string | null,
+    marked: boolean
+  ) => {
     if (!testData) return;
     try {
       await api.post(`/mock-tests/sessions/${testData.sessionId}/save-response`, {
@@ -165,14 +185,17 @@ export const MockTestLivePage: React.FC = () => {
     setCurrentIndex(index);
     const targetQId = testData.questions[index].id;
     setVisited((prev) => new Set(prev).add(targetQId));
+    setMobilePaletteOpen(false);
   };
 
   if (loading || !testData) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-900 text-white">
-        <div className="text-center space-y-4">
-          <div className="w-12 h-12 border-4 border-sky-400 border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="text-sm text-slate-400">Loading Mock Test Environment...</p>
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="text-center space-y-3">
+          <div className="w-8 h-8 border-2 border-slate-900 border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-xs font-medium text-slate-600">
+            Initializing examination environment...
+          </p>
         </div>
       </div>
     );
@@ -181,24 +204,24 @@ export const MockTestLivePage: React.FC = () => {
   const currentQuestion: Question = testData.questions[currentIndex];
   const currentAnswer = answers[currentQuestion.id] || { option: null, marked: false };
 
-  // Format Time Remaining
   const hours = Math.floor(timeLeftSeconds / 3600);
   const mins = Math.floor((timeLeftSeconds % 3600) / 60);
   const secs = timeLeftSeconds % 60;
-  const timeFormatted = `${hours > 0 ? `${hours}:` : ''}${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  const timeFormatted = `${hours > 0 ? `${hours}:` : ''}${mins
+    .toString()
+    .padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 
-  // Palette State Calculation
   const getQuestionPaletteState = (q: Question) => {
     const a = answers[q.id];
     const isVis = visited.has(q.id);
     const hasOption = a && a.option !== null;
     const isMarked = a && a.marked;
 
-    if (hasOption && isMarked) return 'ANSWERED_AND_MARKED'; // Blue
-    if (isMarked) return 'MARKED_FOR_REVIEW'; // Purple
-    if (hasOption) return 'ANSWERED'; // Green
-    if (isVis) return 'NOT_ANSWERED'; // Red
-    return 'UNVISITED'; // Gray
+    if (hasOption && isMarked) return 'ANSWERED_AND_MARKED';
+    if (isMarked) return 'MARKED_FOR_REVIEW';
+    if (hasOption) return 'ANSWERED';
+    if (isVis) return 'NOT_ANSWERED';
+    return 'UNVISITED';
   };
 
   const counts = {
@@ -218,70 +241,154 @@ export const MockTestLivePage: React.FC = () => {
     else counts.unvisited++;
   });
 
+  const renderPaletteContent = () => (
+    <div className="space-y-5">
+      <div className="grid grid-cols-2 gap-2 text-xs text-slate-600">
+        <div className="flex items-center space-x-2">
+          <span className="w-3 h-3 rounded-sm bg-emerald-600 flex-shrink-0" />
+          <span>Answered ({counts.answered})</span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <span className="w-3 h-3 rounded-sm bg-rose-600 flex-shrink-0" />
+          <span>Unanswered ({counts.notAnswered})</span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <span className="w-3 h-3 rounded-sm bg-violet-600 flex-shrink-0" />
+          <span>Marked ({counts.marked})</span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <span className="w-3 h-3 rounded-sm bg-blue-600 flex-shrink-0" />
+          <span>Ans &amp; Marked ({counts.ansMarked})</span>
+        </div>
+        <div className="flex items-center space-x-2 col-span-2">
+          <span className="w-3 h-3 rounded-sm bg-slate-200 border border-slate-300 flex-shrink-0" />
+          <span>Not Visited ({counts.unvisited})</span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-5 gap-2 max-h-72 overflow-y-auto p-1">
+        {testData.questions.map((q, idx) => {
+          const state = getQuestionPaletteState(q);
+          const isCurrent = idx === currentIndex;
+
+          let colorStyle =
+            'bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-200';
+          if (state === 'ANSWERED')
+            colorStyle = 'bg-emerald-600 text-white border-emerald-700';
+          else if (state === 'NOT_ANSWERED')
+            colorStyle = 'bg-rose-600 text-white border-rose-700';
+          else if (state === 'MARKED_FOR_REVIEW')
+            colorStyle = 'bg-violet-600 text-white border-violet-700';
+          else if (state === 'ANSWERED_AND_MARKED')
+            colorStyle = 'bg-blue-600 text-white border-blue-700';
+
+          return (
+            <button
+              key={q.id}
+              type="button"
+              onClick={() => handleNavigateQuestion(idx)}
+              className={`h-9 rounded-md border font-mono text-xs font-semibold transition-colors flex items-center justify-center ${colorStyle} ${
+                isCurrent ? 'ring-2 ring-slate-900 ring-offset-1' : ''
+              }`}
+            >
+              {idx + 1}
+            </button>
+          );
+        })}
+      </div>
+
+      <button
+        type="button"
+        onClick={() => {
+          setMobilePaletteOpen(false);
+          setShowSubmitModal(true);
+        }}
+        className="w-full py-2.5 rounded-lg text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 transition-colors"
+      >
+        Submit Assessment
+      </button>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen flex flex-col bg-slate-100 select-none">
-      {/* Top Test Header with Live Timer */}
-      <header className="bg-slate-900 text-white px-4 sm:px-8 py-3 flex items-center justify-between border-b border-slate-800 shadow-md sticky top-0 z-40">
-        <div>
-          <h1 className="text-base sm:text-lg font-bold truncate max-w-xs sm:max-w-md">
-            {testData.title}
-          </h1>
-          <span className="text-xs text-slate-400">
-            {testData.questions.length} Questions • +{testData.totalMarks / (testData.questions.length || 1)} / -{testData.negativeMarkingRate} Marks
-          </span>
-        </div>
+    <div className="min-h-screen flex flex-col bg-slate-50 select-none">
+      {/* Proctor Exam Top Bar */}
+      <header className="bg-slate-900 text-white px-4 sm:px-6 py-3 border-b border-slate-800 sticky top-0 z-30">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="text-sm sm:text-base font-semibold truncate text-white">
+              {testData.title}
+            </h1>
+            <p className="text-[11px] font-mono text-slate-400">
+              {testData.questions.length} Qs • +{testData.totalMarks / (testData.questions.length || 1)} / -{testData.negativeMarkingRate}
+            </p>
+          </div>
 
-        {/* Real-time Countdown Timer */}
-        <div
-          className={`flex items-center space-x-2 px-4 py-2 rounded-xl border font-mono font-bold text-base sm:text-lg transition-colors ${
-            timeLeftSeconds < 180
-              ? 'bg-rose-500/20 border-rose-500 text-rose-400 animate-pulse'
-              : timeLeftSeconds < 600
-              ? 'bg-amber-500/20 border-amber-500 text-amber-400'
-              : 'bg-slate-800 border-slate-700 text-sky-400'
-          }`}
-        >
-          <Timer className="w-5 h-5 flex-shrink-0" />
-          <span>{timeFormatted}</span>
-        </div>
+          {/* Countdown Timer */}
+          <div
+            className={`flex items-center space-x-2 px-3 py-1.5 rounded-md border font-mono font-semibold text-sm sm:text-base flex-shrink-0 ${
+              timeLeftSeconds < 180
+                ? 'bg-rose-950/80 border-rose-500/70 text-rose-200'
+                : timeLeftSeconds < 600
+                ? 'bg-amber-950/70 border-amber-500/60 text-amber-200'
+                : 'bg-slate-800 border-slate-700 text-slate-100'
+            }`}
+          >
+            <Timer className="w-4 h-4 flex-shrink-0" />
+            <span>{timeFormatted}</span>
+          </div>
 
-        <button
-          onClick={() => setShowSubmitModal(true)}
-          className="px-5 py-2 rounded-xl font-bold text-xs sm:text-sm text-white bg-emerald-600 hover:bg-emerald-700 active:scale-95 transition shadow-md shadow-emerald-600/20"
-        >
-          Submit Test
-        </button>
+          <div className="flex items-center space-x-2 flex-shrink-0">
+            <button
+              type="button"
+              onClick={() => setMobilePaletteOpen(true)}
+              className="lg:hidden inline-flex items-center space-x-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium bg-slate-800 text-slate-200 border border-slate-700 hover:bg-slate-700"
+              aria-label="Open question palette"
+            >
+              <LayoutGrid className="w-4 h-4" />
+              <span className="font-mono">
+                {counts.answered + counts.ansMarked}/{testData.questions.length}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowSubmitModal(true)}
+              className="hidden sm:inline-flex px-4 py-1.5 rounded-md text-xs sm:text-sm font-semibold text-white bg-emerald-700 hover:bg-emerald-600 transition-colors"
+            >
+              Finish Test
+            </button>
+          </div>
+        </div>
       </header>
 
-      {/* Main Examination Arena */}
-      <div className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Left/Center Pane: Active Question */}
-        <div className="lg:col-span-3 flex flex-col justify-between bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8 space-y-6">
-          <div className="space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-              <span className="text-sm font-bold text-slate-700">
+      {/* Main Arena Grid */}
+      <div className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Question Pane */}
+        <div className="lg:col-span-8 xl:col-span-9 bg-white rounded-xl border border-slate-200 shadow-xs p-5 sm:p-7 flex flex-col justify-between min-h-[460px] space-y-6">
+          <div className="space-y-5">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3.5">
+              <span className="text-xs sm:text-sm font-mono font-semibold text-slate-700">
                 Question {currentIndex + 1} of {testData.questions.length}
               </span>
               <span
-                className={`text-xs font-bold px-2.5 py-0.5 rounded-md ${
+                className={`text-[11px] font-mono font-semibold px-2 py-0.5 rounded-md border uppercase ${
                   currentQuestion.difficulty === 'EASY'
-                    ? 'bg-emerald-100 text-emerald-800'
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                     : currentQuestion.difficulty === 'MEDIUM'
-                    ? 'bg-sky-100 text-sky-800'
-                    : 'bg-rose-100 text-rose-800'
+                    ? 'bg-blue-50 text-blue-700 border-blue-200'
+                    : 'bg-rose-50 text-rose-700 border-rose-200'
                 }`}
               >
                 {currentQuestion.difficulty}
               </span>
             </div>
 
-            {/* Question Text */}
-            <h2 className="text-base sm:text-lg font-semibold text-slate-900 leading-relaxed whitespace-pre-line">
+            <h2 className="text-base sm:text-lg font-medium text-slate-900 leading-relaxed whitespace-pre-line">
               {currentQuestion.questionText}
             </h2>
 
-            {/* Options */}
-            <div className="space-y-3 pt-2">
+            <div className="space-y-2.5 pt-1">
               {currentQuestion.options.map((opt) => {
                 const isSelected = currentAnswer.option === opt.optionKey;
                 return (
@@ -289,64 +396,68 @@ export const MockTestLivePage: React.FC = () => {
                     key={opt.id}
                     type="button"
                     onClick={() => handleSelectOption(opt.optionKey)}
-                    className={`w-full text-left p-4 rounded-2xl border-2 transition-all flex items-center justify-between ${
+                    className={`w-full text-left p-3.5 sm:p-4 rounded-lg border transition-colors flex items-center space-x-3.5 ${
                       isSelected
-                        ? 'border-sky-600 bg-sky-50 text-sky-900 shadow-xs font-semibold'
+                        ? 'border-blue-600 bg-blue-50/40 text-slate-900 font-medium'
                         : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-800'
                     }`}
                   >
-                    <div className="flex items-center space-x-3">
-                      <span
-                        className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm ${
-                          isSelected ? 'bg-sky-600 text-white' : 'bg-slate-100 text-slate-600'
-                        }`}
-                      >
-                        {opt.optionKey}
-                      </span>
-                      <span className="text-sm sm:text-base">{opt.optionText}</span>
-                    </div>
+                    <span
+                      className={`w-7 h-7 rounded-md border flex items-center justify-center font-mono font-semibold text-xs flex-shrink-0 ${
+                        isSelected
+                          ? 'bg-blue-600 text-white border-blue-600'
+                          : 'bg-slate-100 text-slate-600 border-slate-200'
+                      }`}
+                    >
+                      {opt.optionKey}
+                    </span>
+                    <span className="text-sm sm:text-base">{opt.optionText}</span>
                   </button>
                 );
               })}
             </div>
           </div>
 
-          {/* Bottom Action Controls */}
-          <div className="pt-6 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center space-x-2">
+          {/* Bottom Navigation Bar */}
+          <div className="pt-5 border-t border-slate-100 flex flex-col-reverse sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-2">
               <button
+                type="button"
                 onClick={handleClearResponse}
                 disabled={!currentAnswer.option}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 border border-slate-200 disabled:opacity-40 transition"
+                className="px-3.5 py-2 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 border border-slate-200 disabled:opacity-40 transition-colors"
               >
-                Clear Selection
+                Clear
               </button>
               <button
+                type="button"
                 onClick={handleToggleMarkReview}
-                className={`inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold border transition ${
+                className={`inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-lg text-xs font-medium border transition-colors ${
                   currentAnswer.marked
-                    ? 'bg-purple-100 border-purple-300 text-purple-800'
-                    : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
+                    ? 'bg-violet-50 border-violet-300 text-violet-800'
+                    : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
                 }`}
               >
                 <Bookmark className="w-3.5 h-3.5" />
-                <span>{currentAnswer.marked ? 'Marked for Review' : 'Mark for Review'}</span>
+                <span>{currentAnswer.marked ? 'Marked' : 'Mark for Review'}</span>
               </button>
             </div>
 
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center justify-between sm:justify-end gap-2.5">
               <button
+                type="button"
                 onClick={() => handleNavigateQuestion(currentIndex - 1)}
                 disabled={currentIndex === 0}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-slate-700 border border-slate-200 hover:bg-slate-100 disabled:opacity-40 transition flex items-center space-x-1"
+                className="flex-1 sm:flex-none justify-center px-4 py-2 rounded-lg text-xs sm:text-sm font-medium text-slate-700 border border-slate-200 hover:bg-slate-50 disabled:opacity-40 transition-colors inline-flex items-center space-x-1"
               >
                 <ChevronLeft className="w-4 h-4" />
                 <span>Previous</span>
               </button>
               <button
+                type="button"
                 onClick={() => handleNavigateQuestion(currentIndex + 1)}
                 disabled={currentIndex === testData.questions.length - 1}
-                className="px-6 py-2 rounded-xl text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 active:scale-95 transition flex items-center space-x-1 shadow-sm"
+                className="flex-1 sm:flex-none justify-center px-5 py-2 rounded-lg text-xs sm:text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 disabled:opacity-40 transition-colors inline-flex items-center space-x-1"
               >
                 <span>Save &amp; Next</span>
                 <ChevronRight className="w-4 h-4" />
@@ -355,99 +466,69 @@ export const MockTestLivePage: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Pane: Question Palette */}
-        <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-5 space-y-6 flex flex-col justify-between">
-          <div className="space-y-4">
-            <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider border-b border-slate-100 pb-3">
-              Question Palette
-            </h3>
+        {/* Desktop Question Palette Sidebar */}
+        <aside className="hidden lg:block lg:col-span-4 xl:col-span-3 bg-white rounded-xl border border-slate-200 shadow-xs p-5 sticky top-20">
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 border-b border-slate-100 pb-3 mb-4">
+            Question Palette
+          </h3>
+          {renderPaletteContent()}
+        </aside>
+      </div>
 
-            {/* Palette Legend */}
-            <div className="grid grid-cols-2 gap-2 text-xs text-slate-600">
-              <div className="flex items-center space-x-2">
-                <span className="w-3.5 h-3.5 rounded-full bg-emerald-500"></span>
-                <span>Answered ({counts.answered})</span>
+      {/* Mobile Palette Slide-over Drawer */}
+      {mobilePaletteOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden flex justify-end bg-slate-900/50">
+          <div className="w-80 max-w-full bg-white h-full p-5 overflow-y-auto shadow-xl flex flex-col justify-between">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                <h3 className="text-sm font-semibold text-slate-900">Question Palette</h3>
+                <button
+                  type="button"
+                  onClick={() => setMobilePaletteOpen(false)}
+                  className="p-1.5 rounded-md text-slate-500 hover:bg-slate-100"
+                  aria-label="Close palette"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
-              <div className="flex items-center space-x-2">
-                <span className="w-3.5 h-3.5 rounded-full bg-rose-500"></span>
-                <span>Unanswered ({counts.notAnswered})</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <span className="w-3.5 h-3.5 rounded-full bg-purple-500"></span>
-                <span>Marked ({counts.marked})</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <span className="w-3.5 h-3.5 rounded-full bg-blue-500"></span>
-                <span>Ans &amp; Marked ({counts.ansMarked})</span>
-              </div>
-              <div className="flex items-center space-x-2 col-span-2">
-                <span className="w-3.5 h-3.5 rounded-full bg-slate-200"></span>
-                <span>Not Visited ({counts.unvisited})</span>
-              </div>
-            </div>
-
-            {/* Palette Buttons Grid */}
-            <div className="grid grid-cols-5 gap-2 max-h-72 overflow-y-auto p-1">
-              {testData.questions.map((q, idx) => {
-                const state = getQuestionPaletteState(q);
-                const isCurrent = idx === currentIndex;
-
-                let colorStyle = 'bg-slate-100 text-slate-700 hover:bg-slate-200 border-slate-200';
-                if (state === 'ANSWERED') colorStyle = 'bg-emerald-500 text-white font-bold border-emerald-600';
-                else if (state === 'NOT_ANSWERED') colorStyle = 'bg-rose-500 text-white font-bold border-rose-600';
-                else if (state === 'MARKED_FOR_REVIEW') colorStyle = 'bg-purple-500 text-white font-bold border-purple-600';
-                else if (state === 'ANSWERED_AND_MARKED') colorStyle = 'bg-blue-500 text-white font-bold border-blue-600';
-
-                return (
-                  <button
-                    key={q.id}
-                    onClick={() => handleNavigateQuestion(idx)}
-                    className={`h-9 rounded-xl border text-xs transition-transform active:scale-90 flex items-center justify-center ${colorStyle} ${
-                      isCurrent ? 'ring-2 ring-slate-900 ring-offset-2' : ''
-                    }`}
-                  >
-                    {idx + 1}
-                  </button>
-                );
-              })}
+              {renderPaletteContent()}
             </div>
           </div>
-
-          <button
-            onClick={() => setShowSubmitModal(true)}
-            className="w-full py-3 rounded-2xl font-bold text-sm text-white bg-slate-900 hover:bg-slate-800 active:scale-95 transition shadow-sm"
-          >
-            Submit Entire Test
-          </button>
         </div>
-      </div>
+      )}
 
       {/* Confirmation Modal */}
       {showSubmitModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 space-y-6 shadow-2xl">
-            <div className="text-center space-y-2">
-              <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center mx-auto">
-                <AlertTriangle className="w-6 h-6" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4">
+          <div className="bg-white rounded-xl border border-slate-200 max-w-md w-full p-6 space-y-5 shadow-lg">
+            <div className="flex items-start space-x-3">
+              <div className="w-10 h-10 rounded-lg bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center flex-shrink-0">
+                <AlertTriangle className="w-5 h-5" />
               </div>
-              <h3 className="text-xl font-bold text-slate-900">Confirm Submission</h3>
-              <p className="text-xs text-slate-500">
-                Are you sure you want to finalize your exam? Once submitted, you cannot alter your answers.
-              </p>
+              <div>
+                <h3 className="text-base font-bold text-slate-900">Submit Assessment?</h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  Once submitted, you cannot modify your responses. Review your summary below.
+                </p>
+              </div>
             </div>
 
-            <div className="bg-slate-50 p-4 rounded-2xl space-y-2 text-xs">
+            <div className="bg-slate-50 p-3.5 rounded-lg border border-slate-200 space-y-2 text-xs">
               <div className="flex justify-between">
-                <span className="text-slate-500">Answered Questions:</span>
-                <strong className="text-emerald-700">{counts.answered + counts.ansMarked}</strong>
+                <span className="text-slate-600">Answered:</span>
+                <strong className="font-mono text-emerald-700">
+                  {counts.answered + counts.ansMarked}
+                </strong>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Marked for Review:</span>
-                <strong className="text-purple-700">{counts.marked}</strong>
+                <span className="text-slate-600">Marked for Review:</span>
+                <strong className="font-mono text-violet-700">{counts.marked}</strong>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Unanswered / Skipped:</span>
-                <strong className="text-rose-700">{counts.notAnswered + counts.unvisited}</strong>
+                <span className="text-slate-600">Unanswered / Skipped:</span>
+                <strong className="font-mono text-rose-700">
+                  {counts.notAnswered + counts.unvisited}
+                </strong>
               </div>
             </div>
 
@@ -455,17 +536,17 @@ export const MockTestLivePage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setShowSubmitModal(false)}
-                className="flex-1 py-2.5 rounded-xl text-xs font-bold border border-slate-200 text-slate-700 hover:bg-slate-50 transition"
+                className="flex-1 py-2 rounded-lg text-xs font-semibold border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors"
               >
-                Continue Exam
+                Resume Test
               </button>
               <button
                 type="button"
                 onClick={handleManualSubmit}
                 disabled={submitting}
-                className="flex-1 py-2.5 rounded-xl text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-700 active:scale-95 transition disabled:opacity-50"
+                className="flex-1 py-2 rounded-lg text-xs font-semibold bg-slate-900 text-white hover:bg-slate-800 transition-colors disabled:opacity-50"
               >
-                {submitting ? 'Submitting...' : 'Yes, Submit'}
+                {submitting ? 'Submitting...' : 'Confirm & Submit'}
               </button>
             </div>
           </div>

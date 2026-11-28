@@ -23,6 +23,9 @@ spring:
     properties:
       hibernate:
         format_sql: false
+        jdbc:
+          batch_size: 50
+        order_inserts: true
 
 jwt:
   secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970

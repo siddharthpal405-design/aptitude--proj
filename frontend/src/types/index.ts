@@ -28,6 +28,38 @@ export interface Category {
   chapters: Chapter[];
 }
 
+export interface FormulaItem {
+  label: string;
+  expression: string;
+}
+
+export interface WorkedExample {
+  problem: string;
+  solution: string;
+}
+
+export interface StudyMaterial {
+  overview: string;
+  formulas: FormulaItem[];
+  shortcuts: string[];
+  workedExample: WorkedExample | null;
+}
+
+export interface ChapterDetail {
+  id: number;
+  title: string;
+  slug: string;
+  description: string;
+  categoryId: number;
+  categoryName: string;
+  categorySlug: string;
+  totalQuestions: number;
+  easyCount: number;
+  mediumCount: number;
+  hardCount: number;
+  studyMaterial: StudyMaterial;
+}
+
 export interface Option {
   id: string;
   optionKey: 'A' | 'B' | 'C' | 'D';
@@ -39,6 +71,23 @@ export interface Question {
   questionText: string;
   difficulty: 'EASY' | 'MEDIUM' | 'HARD';
   options: Option[];
+}
+
+export interface QuestionListItem {
+  id: string;
+  questionText: string;
+  difficulty: 'EASY' | 'MEDIUM' | 'HARD';
+  options: Option[];
+  correctOption: string;
+  explanation: string;
+}
+
+export interface PaginatedResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  number: number;
+  size: number;
 }
 
 export interface CheckAnswerResponse {
@@ -61,7 +110,7 @@ export interface StreakSummary {
 export interface HeatmapDay {
   date: string;
   count: number;
-  level: number; // 0, 1, 2, 3, 4
+  level: number;
 }
 
 export interface MockTestSummary {
