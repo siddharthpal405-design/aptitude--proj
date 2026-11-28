@@ -1,0 +1,30 @@
+name: Render Keep-Alive Bot
+
+on:
+  schedule:
+    # Ping Render every 14 minutes to prevent free-tier 15-minute idle spin-down
+    - cron: '*/14 * * * *'
+  workflow_dispatch:
+
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Render Backend Health Endpoint
+        env:
+          TARGET_URL: ${{ vars.RENDER_HEALTH_URL || secrets.RENDER_HEALTH_URL }}
+        run: |
+          if [ -z "$TARGET_URL" ]; then
+            echo "RENDER_HEALTH_URL is not set yet. Add it in GitHub Repo -> Settings -> Secrets and variables -> Actions -> Variables (e.g. https://aptimore-backend.onrender.com/api/health)."
+            exit 0
+          fi
+
+          echo "Pinging $TARGET_URL at $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+          status_code=$(curl -sS -o /tmp/health.json -w "%{http_code}" --max-time 60 --retry 2 --retry-delay 5 "$TARGET_URL")
+          echo "HTTP Status: $status_code"
+          cat /tmp/health.json || true
+
+          if [ "$status_code" -lt 200 ] || [ "$status_code" -ge 400 ]; then
+            echo "Keep-alive ping failed with HTTP $status_code"
+            exit 1
+          fi

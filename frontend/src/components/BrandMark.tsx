@@ -34,7 +34,7 @@ export const BrandMark: React.FC<BrandMarkProps> = ({ size = 'md', showWordmark 
       {showWordmark && (
         <div className="flex items-baseline space-x-1">
           <span className={`${textSize} font-bold tracking-tight text-slate-900`}>
-            Apti<span className="text-blue-600">Core</span>
+            Apti<span className="text-blue-600">More</span>
           </span>
         </div>
       )}

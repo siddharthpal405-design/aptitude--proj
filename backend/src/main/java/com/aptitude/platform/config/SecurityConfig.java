@@ -44,6 +44,7 @@ public class SecurityConfig {
                 .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable)) // for H2 console
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
+                                "/api/health",
                                 "/api/auth/**",
                                 "/api/categories/**",
                                 "/api/mock-tests",

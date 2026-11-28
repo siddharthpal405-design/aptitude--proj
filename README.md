@@ -1,4 +1,4 @@
-# AptiMaster - Aptitude & Mock Test Platform (Java Full Stack)
+# AptiMore - Aptitude & Mock Test Platform (Java Full Stack)
 
 A comprehensive, production-grade aptitude preparation and examination platform built with **Spring Boot 3 (Java 24)** and **React 18 + Vite + TypeScript + Tailwind CSS**.
 

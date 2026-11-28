@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: aptimore-backend
+    runtime: docker
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: KEEP_ALIVE_ENABLED
+        value: "true"

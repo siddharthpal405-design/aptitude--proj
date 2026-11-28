@@ -1,0 +1,35 @@
+server:
+  port: ${PORT:8080}
+
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:neondb}?sslmode=require}
+    driver-class-name: org.postgresql.Driver
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 0
+      idle-timeout: 120000
+      max-lifetime: 240000
+      connection-timeout: 30000
+      validation-timeout: 5000
+  h2:
+    console:
+      enabled: false
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        jdbc:
+          batch_size: 50
+        order_inserts: true
+
+keepalive:
+  enabled: ${KEEP_ALIVE_ENABLED:true}
+  url: ${KEEP_ALIVE_URL:${RENDER_EXTERNAL_URL:}}
+  interval-ms: ${KEEP_ALIVE_INTERVAL_MS:840000}

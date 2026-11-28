@@ -119,7 +119,7 @@ export const LoginPage: React.FC = () => {
 
         <div className="pt-4 border-t border-slate-100 text-center">
           <p className="text-xs sm:text-sm text-slate-600">
-            New to AptiCore?{' '}
+            New to AptiMore?{' '}
             <Link to="/register" className="font-semibold text-blue-600 hover:text-blue-700">
               Create an account
             </Link>
